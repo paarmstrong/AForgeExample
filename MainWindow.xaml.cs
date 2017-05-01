@@ -80,7 +80,7 @@ namespace AForgeExample
             {
                 var encoder = new PngBitmapEncoder();
 
-                WriteableBitmap wbitmap = new WriteableBitmap((BitmapSource)videoImage.Source);
+                WriteableBitmap wbitmap = new WriteableBitmap((BitmapSource)normalVideoImage.Source);
 
                 BitmapFrame frame = BitmapFrame.Create(wbitmap);
                 encoder.Frames.Add(frame);
@@ -94,6 +94,10 @@ namespace AForgeExample
 
         private ImageSource ImageSourceForBitmap(Bitmap bmp)
         {
+            BitmapData bitmapData = bmp.LockBits(
+                new Rectangle(0, 0, bmp.Width, bmp.Height),
+                ImageLockMode.ReadWrite, bmp.PixelFormat);
+
             var handle = bmp.GetHbitmap();
             try
             {
