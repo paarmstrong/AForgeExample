@@ -15,6 +15,8 @@
         <Image x:Name="videoImage" Margin="10,37,154,296"/>
         <Image x:Name="normalVideoImage" Margin="10,315,154,18"/>
 
+        <Button x:Name="calibrateButton" Content="Calibrate" Margin="0,94,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="75" Click="calibrateButton_Click"/>
+
         <Label x:Name="redLabel" Content="Red" Margin="0,121,61,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="31"/>
         <TextBox x:Name="redTextBox" Height="23" Margin="0,121,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
 
@@ -23,7 +25,7 @@
 
         <Label x:Name="blueLabel" Content="Blue" Margin="0,177,61,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="33"/>
         <TextBox x:Name="blueTextBox" Height="23" Margin="0,177,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
-        <Label x:Name="radiusLabel" Content="Radius" HorizontalAlignment="Left" Margin="560,205,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="radiusLabel" Content="Radius" HorizontalAlignment="Right" Margin="0,205,56,0" VerticalAlignment="Top"/>
         <TextBox x:Name="radiusTextBox" Height="23" Margin="0,205,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
     </Grid>
 </Window>

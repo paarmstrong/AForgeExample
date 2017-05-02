@@ -68,7 +68,7 @@ namespace AForgeExample
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    videoImage.Source = ProcessImageSourceForBitmap((Bitmap)eventArgs.Frame.Clone());
+                    videoImage.Source = ProcessRectangeImageSourceForBitmap((Bitmap)eventArgs.Frame.Clone());
                     normalVideoImage.Source = ImageSourceForBitmap((Bitmap)eventArgs.Frame.Clone());
                 });
             }
@@ -85,18 +85,76 @@ namespace AForgeExample
                 BitmapFrame frame = BitmapFrame.Create(wbitmap);
                 encoder.Frames.Add(frame);
 
-                using (var stream = File.Create("Test.png"))
+                using (var stream = File.Create(DateTime.Now.Ticks + ".png"))
                 {
                     encoder.Save(stream);
                 }
             }
         }
 
+        private void calibrateButton_Click(object sender, RoutedEventArgs e)
+        {
+            Bitmap bmp = BitmapFromSource((BitmapSource)normalVideoImage.Source);
+            int rectangleWidth = bmp.Width / 4;
+            int rectangleHeight = bmp.Height / 4;
+
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
+            var filter = new Crop(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight));
+
+            var hslBitmap = filter.Apply(bitmapData);
+
+            var stats = new ImageStatistics(hslBitmap);
+
+            redTextBox.Text = Convert.ToInt32(stats.Red.Median).ToString();
+            greenTextBox.Text = Convert.ToInt32(stats.Green.Median).ToString();
+            blueTextBox.Text = Convert.ToInt32(stats.Blue.Median).ToString();
+        }
+
+        private static Bitmap BitmapFromSource(BitmapSource bitmapsource)
+        {
+            Bitmap bitmap;
+            using (var outStream = new MemoryStream())
+            {
+                BitmapEncoder enc = new BmpBitmapEncoder();
+                enc.Frames.Add(BitmapFrame.Create(bitmapsource));
+                enc.Save(outStream);
+                bitmap = new Bitmap(outStream);
+            }
+            return bitmap;
+        }
+
         private ImageSource ImageSourceForBitmap(Bitmap bmp)
         {
-            BitmapData bitmapData = bmp.LockBits(
-                new Rectangle(0, 0, bmp.Width, bmp.Height),
-                ImageLockMode.ReadWrite, bmp.PixelFormat);
+            int rectangleWidth = bmp.Width / 4;
+            int rectangleHeight = bmp.Height / 4;
+
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            AForge.Imaging.Drawing.Rectangle(bitmapData, new Rectangle(0, 0, rectangleWidth, rectangleHeight), System.Drawing.Color.Red);
+
+            bmp.UnlockBits(bitmapData);
+
+            var handle = bmp.GetHbitmap();
+            try
+            {
+                return Imaging.CreateBitmapSourceFromHBitmap(handle, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            }
+            finally { DeleteObject(handle); }
+        }
+
+        private ImageSource ProcessRectangeImageSourceForBitmap(Bitmap bmp)
+        {
+            int rectangleWidth = bmp.Width / 4;
+            int rectangleHeight = bmp.Height / 4;
+
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            EuclideanColorFiltering filter = new EuclideanColorFiltering();
+            filter.CenterColor = new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text));
+            filter.Radius = short.Parse(radiusTextBox.Text);
+            filter.ApplyInPlace(bitmapData);
+
+            bmp.UnlockBits(bitmapData);
 
             var handle = bmp.GetHbitmap();
             try
@@ -115,7 +173,6 @@ namespace AForgeExample
             EuclideanColorFiltering filter = new EuclideanColorFiltering();
             filter.CenterColor = new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text));
             filter.Radius = short.Parse(radiusTextBox.Text);
-
             filter.ApplyInPlace(bitmapData);
 
             BlobCounter blobCounter = new BlobCounter();
@@ -123,6 +180,8 @@ namespace AForgeExample
             blobCounter.FilterBlobs = true;
             blobCounter.MinHeight = 5;
             blobCounter.MinWidth = 5;
+            blobCounter.MaxHeight = bitmapData.Width-1;
+            blobCounter.MaxWidth = bitmapData.Width-1;
 
             blobCounter.ProcessImage(bitmapData);
             Blob[] blobs = blobCounter.GetObjectsInformation();
