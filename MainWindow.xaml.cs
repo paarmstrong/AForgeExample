@@ -29,6 +29,7 @@ namespace AForgeExample
         private FilterInfoCollection VideoCaptureDevices;
         private VideoCaptureDevice VideoDevice;
 
+        List<RectangleF> Circles = new List<RectangleF>();
         private bool calibrated = false;
 
         public MainWindow()
@@ -103,15 +104,29 @@ namespace AForgeExample
             BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
             var filter = new Crop(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight));
 
-            var hslBitmap = filter.Apply(bitmapData);
+            var croppedBitmap = filter.Apply(bitmapData);
 
-            var stats = new ImageStatistics(hslBitmap);
+            var stats = new ImageStatistics(croppedBitmap);
 
             redTextBox.Text = Convert.ToInt32(stats.Red.Median).ToString();
             greenTextBox.Text = Convert.ToInt32(stats.Green.Median).ToString();
             blueTextBox.Text = Convert.ToInt32(stats.Blue.Median).ToString();
 
             calibrated = true;
+            testPassedLabel.Content = "";
+            Circles.Clear();
+        }
+
+        private void resetCalibrationButton_Click(object sender, RoutedEventArgs e)
+        {
+            redTextBox.Text = "0";
+            greenTextBox.Text = "0";
+            blueTextBox.Text = "0";
+
+            testPassedLabel.Content = "";
+            Circles.Clear();
+
+            calibrated = false;
         }
 
         private static Bitmap BitmapFromSource(BitmapSource bitmapsource)
@@ -151,29 +166,33 @@ namespace AForgeExample
             int rectangleWidth = bmp.Width / 4;
             int rectangleHeight = bmp.Height / 4;
 
-            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+            EuclideanColorFiltering filter = new EuclideanColorFiltering(new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text)), short.Parse(radiusTextBox.Text));
 
-            EuclideanColorFiltering filter = new EuclideanColorFiltering();
-            filter.CenterColor = new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text));
-            filter.Radius = short.Parse(radiusTextBox.Text);
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
             filter.ApplyInPlace(bitmapData);
+            bmp.UnlockBits(bitmapData);
 
             BlobCounter blobCounter = new BlobCounter();
 
             blobCounter.FilterBlobs = true;
-            blobCounter.MinHeight = 5;
-            blobCounter.MinWidth = 5;
+            blobCounter.MinHeight = 10;
+            blobCounter.MinWidth = 10;
             blobCounter.MaxHeight = bitmapData.Width - 1;
             blobCounter.MaxWidth = bitmapData.Width - 1;
 
-            blobCounter.ProcessImage(bitmapData);
+            blobCounter.ProcessImage(bmp);
             Blob[] blobs = blobCounter.GetObjectsInformation();
-            bmp.UnlockBits(bitmapData);
 
             SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
 
             Graphics g = Graphics.FromImage(bmp);
+
             System.Drawing.Pen yellowPen = new System.Drawing.Pen(System.Drawing.Color.Yellow, 5);
+
+            foreach (var circle in Circles)
+            {
+                g.DrawEllipse(yellowPen, circle);
+            }
 
             for (int i = 0, n = blobs.Length; i < n; i++)
             {
@@ -184,11 +203,11 @@ namespace AForgeExample
 
                 if (shapeChecker.IsCircle(edgePoints, out center, out radius))
                 {
-                    g.DrawEllipse(yellowPen, (rectangleWidth + (rectangleWidth / 2)) + (float)(center.X - radius), rectangleHeight + (rectangleHeight / 2) + (float)(center.Y - radius), (float)(radius * 2), (float)(radius * 2));
+                    Circles.Add(new RectangleF((float)(center.X - radius), (float)(center.Y - radius), (float)(radius * 2), (float)(radius * 2)));
 
                     if (calibrated)
                     {
-                        MessageBox.Show("Light successfully detected");
+                        testPassedLabel.Content = "Light was detected";
                     }
                 }
             }
