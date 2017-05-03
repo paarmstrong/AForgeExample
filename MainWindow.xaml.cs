@@ -29,6 +29,8 @@ namespace AForgeExample
         private FilterInfoCollection VideoCaptureDevices;
         private VideoCaptureDevice VideoDevice;
 
+        private bool calibrated = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -108,6 +110,8 @@ namespace AForgeExample
             redTextBox.Text = Convert.ToInt32(stats.Red.Median).ToString();
             greenTextBox.Text = Convert.ToInt32(stats.Green.Median).ToString();
             blueTextBox.Text = Convert.ToInt32(stats.Blue.Median).ToString();
+
+            calibrated = true;
         }
 
         private static Bitmap BitmapFromSource(BitmapSource bitmapsource)
@@ -154,7 +158,40 @@ namespace AForgeExample
             filter.Radius = short.Parse(radiusTextBox.Text);
             filter.ApplyInPlace(bitmapData);
 
+            BlobCounter blobCounter = new BlobCounter();
+
+            blobCounter.FilterBlobs = true;
+            blobCounter.MinHeight = 5;
+            blobCounter.MinWidth = 5;
+            blobCounter.MaxHeight = bitmapData.Width - 1;
+            blobCounter.MaxWidth = bitmapData.Width - 1;
+
+            blobCounter.ProcessImage(bitmapData);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
             bmp.UnlockBits(bitmapData);
+
+            SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
+
+            Graphics g = Graphics.FromImage(bmp);
+            System.Drawing.Pen yellowPen = new System.Drawing.Pen(System.Drawing.Color.Yellow, 5);
+
+            for (int i = 0, n = blobs.Length; i < n; i++)
+            {
+                List<IntPoint> edgePoints = blobCounter.GetBlobsEdgePoints(blobs[i]);
+
+                AForge.Point center;
+                float radius;
+
+                if (shapeChecker.IsCircle(edgePoints, out center, out radius))
+                {
+                    g.DrawEllipse(yellowPen, (rectangleWidth + (rectangleWidth / 2)) + (float)(center.X - radius), rectangleHeight + (rectangleHeight / 2) + (float)(center.Y - radius), (float)(radius * 2), (float)(radius * 2));
+
+                    if (calibrated)
+                    {
+                        MessageBox.Show("Light successfully detected");
+                    }
+                }
+            }
 
             var handle = bmp.GetHbitmap();
             try
