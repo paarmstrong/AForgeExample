@@ -177,8 +177,6 @@ namespace AForgeExample
             blobCounter.FilterBlobs = true;
             blobCounter.MinHeight = 10;
             blobCounter.MinWidth = 10;
-            blobCounter.MaxHeight = bitmapData.Width - 1;
-            blobCounter.MaxWidth = bitmapData.Width - 1;
 
             blobCounter.ProcessImage(bmp);
             Blob[] blobs = blobCounter.GetObjectsInformation();
