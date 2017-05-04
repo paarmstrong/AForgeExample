@@ -28,7 +28,10 @@
         <TextBox x:Name="blueTextBox" Height="23" Margin="0,177,10,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
         <Label x:Name="radiusLabel" Content="Radius" HorizontalAlignment="Right" Margin="0,205,56,0" VerticalAlignment="Top"/>
         <TextBox x:Name="radiusTextBox" Height="23" Margin="0,205,10,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
-        
+
         <Label x:Name="testPassedLabel" HorizontalAlignment="Left" Margin="528,236,0,0" VerticalAlignment="Top" Width="123"/>
+
+        <Rectangle x:Name="calibratedColorRect" Fill="Black" HorizontalAlignment="Left" Height="45" Margin="597,38,0,0" Stroke="Black" VerticalAlignment="Top" Width="46"/>
+        <Label x:Name="calibratedColorLabel" Content="Calibrated Color" HorizontalAlignment="Left" Margin="499,45,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

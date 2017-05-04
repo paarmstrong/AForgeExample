@@ -108,9 +108,16 @@ namespace AForgeExample
 
             var stats = new ImageStatistics(croppedBitmap);
 
-            redTextBox.Text = Convert.ToInt32(stats.Red.Median).ToString();
-            greenTextBox.Text = Convert.ToInt32(stats.Green.Median).ToString();
-            blueTextBox.Text = Convert.ToInt32(stats.Blue.Median).ToString();
+            redTextBox.Text = Convert.ToInt32(stats.Red.Mean).ToString();
+            greenTextBox.Text = Convert.ToInt32(stats.Green.Mean).ToString();
+            blueTextBox.Text = Convert.ToInt32(stats.Blue.Mean).ToString();
+
+            var brushColor = new System.Windows.Media.Color();
+            brushColor.R = byte.Parse(redTextBox.Text);
+            brushColor.G = byte.Parse(greenTextBox.Text);
+            brushColor.B = byte.Parse(blueTextBox.Text);
+            brushColor.A = byte.MaxValue;
+            calibratedColorRect.Fill = new SolidColorBrush(brushColor);
 
             calibrated = true;
             testPassedLabel.Content = "";
@@ -127,6 +134,13 @@ namespace AForgeExample
             Circles.Clear();
 
             calibrated = false;
+
+            var brushColor = new System.Windows.Media.Color();
+            brushColor.R = byte.Parse(redTextBox.Text);
+            brushColor.G = byte.Parse(greenTextBox.Text);
+            brushColor.B = byte.Parse(blueTextBox.Text);
+            brushColor.A = byte.MaxValue;
+            calibratedColorRect.Fill = new SolidColorBrush(brushColor);
         }
 
         private static Bitmap BitmapFromSource(BitmapSource bitmapsource)
@@ -166,19 +180,22 @@ namespace AForgeExample
             int rectangleWidth = bmp.Width / 4;
             int rectangleHeight = bmp.Height / 4;
 
-            EuclideanColorFiltering filter = new EuclideanColorFiltering(new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text)), short.Parse(radiusTextBox.Text));
-
             BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+
+            EuclideanColorFiltering filter = new EuclideanColorFiltering(new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text)), short.Parse(radiusTextBox.Text));
             filter.ApplyInPlace(bitmapData);
-            bmp.UnlockBits(bitmapData);
 
             BlobCounter blobCounter = new BlobCounter();
 
             blobCounter.FilterBlobs = true;
             blobCounter.MinHeight = 10;
             blobCounter.MinWidth = 10;
+            blobCounter.MaxHeight = bitmapData.Height - 1;
+            blobCounter.MaxWidth = bitmapData.Width - 1;
 
-            blobCounter.ProcessImage(bmp);
+            blobCounter.ProcessImage(bitmapData);
+            bmp.UnlockBits(bitmapData);
+
             Blob[] blobs = blobCounter.GetObjectsInformation();
 
             SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
@@ -201,7 +218,7 @@ namespace AForgeExample
 
                 if (shapeChecker.IsCircle(edgePoints, out center, out radius))
                 {
-                    Circles.Add(new RectangleF((float)(center.X - radius), (float)(center.Y - radius), (float)(radius * 2), (float)(radius * 2)));
+                    Circles.Add(new RectangleF((rectangleWidth + (rectangleWidth / 2) + (float)(center.X - radius)), (rectangleHeight + (rectangleHeight / 2) + (float)(center.Y - radius)), (float)(radius * 2), (float)(radius * 2)));
 
                     if (calibrated)
                     {
@@ -234,8 +251,8 @@ namespace AForgeExample
             blobCounter.FilterBlobs = true;
             blobCounter.MinHeight = 5;
             blobCounter.MinWidth = 5;
-            blobCounter.MaxHeight = bitmapData.Width-1;
-            blobCounter.MaxWidth = bitmapData.Width-1;
+            blobCounter.MaxHeight = bitmapData.Width - 1;
+            blobCounter.MaxWidth = bitmapData.Width - 1;
 
             blobCounter.ProcessImage(bitmapData);
             Blob[] blobs = blobCounter.GetObjectsInformation();
