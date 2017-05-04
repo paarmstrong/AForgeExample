@@ -22,6 +22,8 @@ namespace AForgeExample
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const int MAX_CORNERS = 50;
+
         [DllImport("gdi32.dll", EntryPoint = "DeleteObject")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool DeleteObject([In] IntPtr hObject);
@@ -29,8 +31,12 @@ namespace AForgeExample
         private FilterInfoCollection VideoCaptureDevices;
         private VideoCaptureDevice VideoDevice;
 
-        List<RectangleF> Circles = new List<RectangleF>();
+        List<List<IntPoint>> Corners = new List<List<IntPoint>>();
         private bool calibrated = false;
+        private bool StartDetecting = false;
+
+        int FilterWidth = 120;
+        int FilterHeight = 120;
 
         public MainWindow()
         {
@@ -50,6 +56,8 @@ namespace AForgeExample
             VideoDevice = new VideoCaptureDevice(VideoCaptureDevices[sourcesComboBox.SelectedIndex].MonikerString);
             VideoDevice.NewFrame += VideoDevice_NewFrame;
             VideoDevice.Start();
+
+            VideoDevice.DisplayPropertyPage(IntPtr.Zero);
         }
 
         private void stopButton_Click(object sender, RoutedEventArgs e)
@@ -98,11 +106,9 @@ namespace AForgeExample
         private void calibrateButton_Click(object sender, RoutedEventArgs e)
         {
             Bitmap bmp = BitmapFromSource((BitmapSource)normalVideoImage.Source);
-            int rectangleWidth = bmp.Width / 4;
-            int rectangleHeight = bmp.Height / 4;
 
             BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
-            var filter = new Crop(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight));
+            var filter = new Crop(new Rectangle((bmp.Width / 2) - (FilterWidth / 2), (bmp.Height / 2) - (FilterHeight / 2), FilterWidth, FilterHeight));
 
             var croppedBitmap = filter.Apply(bitmapData);
 
@@ -121,7 +127,9 @@ namespace AForgeExample
 
             calibrated = true;
             testPassedLabel.Content = "";
-            Circles.Clear();
+            Corners.Clear();
+
+            StartDetecting = false;
         }
 
         private void resetCalibrationButton_Click(object sender, RoutedEventArgs e)
@@ -131,9 +139,10 @@ namespace AForgeExample
             blueTextBox.Text = "0";
 
             testPassedLabel.Content = "";
-            Circles.Clear();
+            Corners.Clear();
 
             calibrated = false;
+            StartDetecting = false;
 
             var brushColor = new System.Windows.Media.Color();
             brushColor.R = byte.Parse(redTextBox.Text);
@@ -158,12 +167,9 @@ namespace AForgeExample
 
         private ImageSource ImageSourceForBitmap(Bitmap bmp)
         {
-            int rectangleWidth = bmp.Width / 4;
-            int rectangleHeight = bmp.Height / 4;
+            BitmapData bitmapData = bmp.LockBits(new Rectangle((bmp.Width / 2) - (FilterWidth / 2), (bmp.Height / 2) - (FilterHeight / 2), FilterWidth, FilterHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
-            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
-
-            AForge.Imaging.Drawing.Rectangle(bitmapData, new Rectangle(0, 0, rectangleWidth, rectangleHeight), System.Drawing.Color.Red);
+            AForge.Imaging.Drawing.Rectangle(bitmapData, new Rectangle(0, 0, FilterWidth, FilterHeight), System.Drawing.Color.Red);
 
             bmp.UnlockBits(bitmapData);
 
@@ -177,52 +183,54 @@ namespace AForgeExample
 
         private ImageSource ProcessRectangeImageSourceForBitmap(Bitmap bmp)
         {
-            int rectangleWidth = bmp.Width / 4;
-            int rectangleHeight = bmp.Height / 4;
-
-            BitmapData bitmapData = bmp.LockBits(new Rectangle(rectangleWidth + (rectangleWidth / 2), rectangleHeight + (rectangleHeight / 2), rectangleWidth, rectangleHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+            BitmapData bitmapData = bmp.LockBits(new Rectangle((bmp.Width / 2) - (FilterWidth / 2), (bmp.Height / 2) - (FilterHeight / 2), FilterWidth, FilterHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
             EuclideanColorFiltering filter = new EuclideanColorFiltering(new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text)), short.Parse(radiusTextBox.Text));
             filter.ApplyInPlace(bitmapData);
 
-            BlobCounter blobCounter = new BlobCounter();
-
-            blobCounter.FilterBlobs = true;
-            blobCounter.MinHeight = 10;
-            blobCounter.MinWidth = 10;
-            blobCounter.MaxHeight = bitmapData.Height - 1;
-            blobCounter.MaxWidth = bitmapData.Width - 1;
-
-            blobCounter.ProcessImage(bitmapData);
-            bmp.UnlockBits(bitmapData);
-
-            Blob[] blobs = blobCounter.GetObjectsInformation();
-
-            SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
-
-            Graphics g = Graphics.FromImage(bmp);
-
-            System.Drawing.Pen yellowPen = new System.Drawing.Pen(System.Drawing.Color.Yellow, 5);
-
-            foreach (var circle in Circles)
+            if (StartDetecting)
             {
-                g.DrawEllipse(yellowPen, circle);
-            }
+                BlobCounter blobCounter = new BlobCounter();
 
-            for (int i = 0, n = blobs.Length; i < n; i++)
-            {
-                List<IntPoint> edgePoints = blobCounter.GetBlobsEdgePoints(blobs[i]);
+                blobCounter.FilterBlobs = true;
+                blobCounter.MinHeight = 2;
+                blobCounter.MinWidth = 2;
+                blobCounter.MaxHeight = bitmapData.Height - 1;
+                blobCounter.MaxWidth = bitmapData.Width - 1;
 
-                AForge.Point center;
-                float radius;
+                blobCounter.ProcessImage(bitmapData);
+                bmp.UnlockBits(bitmapData);
 
-                if (shapeChecker.IsCircle(edgePoints, out center, out radius))
+                Blob[] blobs = blobCounter.GetObjectsInformation();
+
+                SimpleShapeChecker shapeChecker = new SimpleShapeChecker();
+
+                Graphics g = Graphics.FromImage(bmp);
+
+                System.Drawing.Pen yellowPen = new System.Drawing.Pen(System.Drawing.Color.Yellow, 5);
+
+                foreach (var corners in Corners)
                 {
-                    Circles.Add(new RectangleF((rectangleWidth + (rectangleWidth / 2) + (float)(center.X - radius)), (rectangleHeight + (rectangleHeight / 2) + (float)(center.Y - radius)), (float)(radius * 2), (float)(radius * 2)));
-
-                    if (calibrated)
+                    foreach (var corner in corners)
                     {
-                        testPassedLabel.Content = "Light was detected";
+                        g.DrawRectangle(yellowPen, corner.X + (bmp.Width / 2) - (FilterWidth / 2), corner.Y + (bmp.Height / 2) - (FilterHeight / 2), 1, 1);
+                    }
+                }
+
+                for (int i = 0, n = blobs.Length; i < n; i++)
+                {
+                    List<IntPoint> edgePoints = blobCounter.GetBlobsEdgePoints(blobs[i]);
+                    List<IntPoint> corners;
+                    if (shapeChecker.IsConvexPolygon(edgePoints, out corners))
+                    {
+                        if (calibrated)
+                        {
+                            if (Corners.Count < MAX_CORNERS)
+                            {
+                                Corners.Add(corners);
+                            }
+                            testPassedLabel.Content = "Light was detected";
+                        }
                     }
                 }
             }
@@ -249,8 +257,8 @@ namespace AForgeExample
             BlobCounter blobCounter = new BlobCounter();
 
             blobCounter.FilterBlobs = true;
-            blobCounter.MinHeight = 5;
-            blobCounter.MinWidth = 5;
+            blobCounter.MinHeight = 10;
+            blobCounter.MinWidth = 10;
             blobCounter.MaxHeight = bitmapData.Width - 1;
             blobCounter.MaxWidth = bitmapData.Width - 1;
 
@@ -320,6 +328,11 @@ namespace AForgeExample
         private System.Drawing.Point[] ToPointsArray(List<IntPoint> points)
         {
             return points.Select(p => new System.Drawing.Point(p.X, p.Y)).ToArray();
+        }
+
+        private void startDetectingButton_Click(object sender, RoutedEventArgs e)
+        {
+            StartDetecting = true;
         }
     }
 }

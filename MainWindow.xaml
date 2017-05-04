@@ -11,9 +11,9 @@
         <ComboBox x:Name="sourcesComboBox" DisplayMemberPath="Name" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="120"/>
         <Button x:Name="startButton" Content="Start" HorizontalAlignment="Left" Margin="135,10,0,0" VerticalAlignment="Top" Width="75" Click="startButton_Click"/>
         <Button x:Name="stopButton" Content="Stop" HorizontalAlignment="Left" Margin="215,10,0,0" VerticalAlignment="Top" Width="75" Click="stopButton_Click"/>
-        <Button x:Name="snapshotButton" Content="Snapshot" HorizontalAlignment="Left" Margin="432,10,0,0" VerticalAlignment="Top" Width="75" Click="snapshotButton_Click"/>
-        <Image x:Name="videoImage" Margin="10,37,154,296"/>
-        <Image x:Name="normalVideoImage" Margin="10,315,154,18"/>
+        <Button x:Name="snapshotButton" Content="Snapshot" Margin="0,10,154,0" VerticalAlignment="Top" Click="snapshotButton_Click" HorizontalAlignment="Right" Width="75"/>
+        <Image x:Name="videoImage" Margin="10,37,154,0" Height="273" VerticalAlignment="Top"/>
+        <Image x:Name="normalVideoImage" Margin="10,0,154,18" Height="273" VerticalAlignment="Bottom"/>
 
         <Button x:Name="calibrateButton" Content="Calibrate" Margin="0,94,74,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="59" Click="calibrateButton_Click"/>
         <Button x:Name="resetCalibrationButton" Content="Reset" Margin="0,94,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="59" Click="resetCalibrationButton_Click"/>
@@ -29,9 +29,10 @@
         <Label x:Name="radiusLabel" Content="Radius" HorizontalAlignment="Right" Margin="0,205,56,0" VerticalAlignment="Top"/>
         <TextBox x:Name="radiusTextBox" Height="23" Margin="0,205,10,0" TextWrapping="Wrap" Text="20" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
 
-        <Label x:Name="testPassedLabel" HorizontalAlignment="Left" Margin="528,236,0,0" VerticalAlignment="Top" Width="123"/>
+        <Label x:Name="testPassedLabel" Margin="0,236,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="123"/>
 
-        <Rectangle x:Name="calibratedColorRect" Fill="Black" HorizontalAlignment="Left" Height="45" Margin="597,38,0,0" Stroke="Black" VerticalAlignment="Top" Width="46"/>
-        <Label x:Name="calibratedColorLabel" Content="Calibrated Color" HorizontalAlignment="Left" Margin="499,45,0,0" VerticalAlignment="Top"/>
+        <Rectangle x:Name="calibratedColorRect" Fill="Black" Height="45" Margin="0,38,18,0" Stroke="Black" VerticalAlignment="Top" HorizontalAlignment="Right" Width="46"/>
+        <Label x:Name="calibratedColorLabel" Content="Calibrated Color" Margin="0,45,66,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="96"/>
+        <Button x:Name="startDetectingButton" Content="Start Detecting" Margin="0,343,13,0" VerticalAlignment="Top" Click="startDetectingButton_Click" HorizontalAlignment="Right" Width="123"/>
     </Grid>
 </Window>
