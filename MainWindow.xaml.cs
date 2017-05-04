@@ -66,7 +66,7 @@ namespace AForgeExample
         private void VideoDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
             var device = (VideoCaptureDevice)sender;
-
+            
             if (device.IsRunning)
             {
                 this.Dispatcher.Invoke(() =>
@@ -108,9 +108,9 @@ namespace AForgeExample
 
             var stats = new ImageStatistics(croppedBitmap);
 
-            redTextBox.Text = Convert.ToInt32(stats.Red.Mean).ToString();
-            greenTextBox.Text = Convert.ToInt32(stats.Green.Mean).ToString();
-            blueTextBox.Text = Convert.ToInt32(stats.Blue.Mean).ToString();
+            redTextBox.Text = Convert.ToInt32(stats.Red.Median).ToString();
+            greenTextBox.Text = Convert.ToInt32(stats.Green.Median).ToString();
+            blueTextBox.Text = Convert.ToInt32(stats.Blue.Median).ToString();
 
             var brushColor = new System.Windows.Media.Color();
             brushColor.R = byte.Parse(redTextBox.Text);
