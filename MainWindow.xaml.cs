@@ -22,7 +22,7 @@ namespace AForgeExample
     /// </summary>
     public partial class MainWindow : Window
     {
-        private const int MAX_CORNERS = 50;
+        private const int MAX_CORNERS = 500;
 
         [DllImport("gdi32.dll", EntryPoint = "DeleteObject")]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -31,7 +31,7 @@ namespace AForgeExample
         private FilterInfoCollection VideoCaptureDevices;
         private VideoCaptureDevice VideoDevice;
 
-        List<List<IntPoint>> Corners = new List<List<IntPoint>>();
+        List<IntPoint> Corners = new List<IntPoint>();
         private bool calibrated = false;
         private bool StartDetecting = false;
 
@@ -209,12 +209,9 @@ namespace AForgeExample
 
                 System.Drawing.Pen yellowPen = new System.Drawing.Pen(System.Drawing.Color.Yellow, 5);
 
-                foreach (var corners in Corners)
+                foreach (var corner in Corners)
                 {
-                    foreach (var corner in corners)
-                    {
-                        g.DrawRectangle(yellowPen, corner.X + (bmp.Width / 2) - (FilterWidth / 2), corner.Y + (bmp.Height / 2) - (FilterHeight / 2), 1, 1);
-                    }
+                    g.DrawRectangle(yellowPen, corner.X + (bmp.Width / 2) - (FilterWidth / 2), corner.Y + (bmp.Height / 2) - (FilterHeight / 2), 1, 1);
                 }
 
                 for (int i = 0, n = blobs.Length; i < n; i++)
@@ -227,10 +224,20 @@ namespace AForgeExample
                         {
                             if (Corners.Count < MAX_CORNERS)
                             {
-                                Corners.Add(corners);
+                                foreach (var corner in corners)
+                                {
+                                    if (!Corners.Contains(corner))
+                                    {
+                                        Corners.Add(corner);
+                                    }
+                                }
                             }
-                            testPassedLabel.Content = "Light was detected";
+                            else
+                            {
+                                testPassedLabel.Content = "Light was detected";
+                            }
                         }
+
                     }
                 }
             }
@@ -245,9 +252,7 @@ namespace AForgeExample
 
         private ImageSource ProcessImageSourceForBitmap(Bitmap bmp)
         {
-            BitmapData bitmapData = bmp.LockBits(
-                new Rectangle(0, 0, bmp.Width, bmp.Height),
-                ImageLockMode.ReadWrite, bmp.PixelFormat);
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
             EuclideanColorFiltering filter = new EuclideanColorFiltering();
             filter.CenterColor = new RGB(byte.Parse(redTextBox.Text), byte.Parse(greenTextBox.Text), byte.Parse(blueTextBox.Text));
@@ -257,8 +262,8 @@ namespace AForgeExample
             BlobCounter blobCounter = new BlobCounter();
 
             blobCounter.FilterBlobs = true;
-            blobCounter.MinHeight = 10;
-            blobCounter.MinWidth = 10;
+            blobCounter.MinHeight = 15;
+            blobCounter.MinWidth = 15;
             blobCounter.MaxHeight = bitmapData.Width - 1;
             blobCounter.MaxWidth = bitmapData.Width - 1;
 
