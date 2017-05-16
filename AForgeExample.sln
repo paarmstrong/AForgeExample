@@ -5,6 +5,10 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AForgeExample", "AForgeExample.csproj", "{F84057C0-7BCB-492F-8B5F-5600AA27FE8F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenCVExample", "..\OpenCVExample\OpenCVExample.csproj", "{A9CDB6D6-490F-4018-8911-5F190C75712F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AforgeNeuroTest", "AforgeNeuroTest\AforgeNeuroTest.csproj", "{DF8445F2-5975-4839-910D-A2DA793BD489}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{F84057C0-7BCB-492F-8B5F-5600AA27FE8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F84057C0-7BCB-492F-8B5F-5600AA27FE8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F84057C0-7BCB-492F-8B5F-5600AA27FE8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9CDB6D6-490F-4018-8911-5F190C75712F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9CDB6D6-490F-4018-8911-5F190C75712F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9CDB6D6-490F-4018-8911-5F190C75712F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9CDB6D6-490F-4018-8911-5F190C75712F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF8445F2-5975-4839-910D-A2DA793BD489}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF8445F2-5975-4839-910D-A2DA793BD489}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF8445F2-5975-4839-910D-A2DA793BD489}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF8445F2-5975-4839-910D-A2DA793BD489}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

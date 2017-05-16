@@ -35,8 +35,8 @@ namespace AForgeExample
         private bool calibrated = false;
         private bool StartDetecting = false;
 
-        int FilterWidth = 120;
-        int FilterHeight = 120;
+        int FilterWidth = 240;
+        int FilterHeight = 240;
 
         public MainWindow()
         {
@@ -74,10 +74,10 @@ namespace AForgeExample
         private void VideoDevice_NewFrame(object sender, AForge.Video.NewFrameEventArgs eventArgs)
         {
             var device = (VideoCaptureDevice)sender;
-            
+
             if (device.IsRunning)
             {
-                this.Dispatcher.Invoke(() =>
+                this.Dispatcher?.Invoke(() =>
                 {
                     videoImage.Source = ProcessRectangeImageSourceForBitmap((Bitmap)eventArgs.Frame.Clone());
                     normalVideoImage.Source = ImageSourceForBitmap((Bitmap)eventArgs.Frame.Clone());
@@ -108,7 +108,7 @@ namespace AForgeExample
             Bitmap bmp = BitmapFromSource((BitmapSource)normalVideoImage.Source);
 
             BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, bmp.PixelFormat);
-            var filter = new Crop(new Rectangle((bmp.Width / 2) - (FilterWidth / 2), (bmp.Height / 2) - (FilterHeight / 2), FilterWidth, FilterHeight));
+            var filter = new Crop(new Rectangle((bmp.Width / 2) - (FilterWidth / 4), (bmp.Height / 2) - (FilterHeight / 4), FilterWidth / 2, FilterHeight / 2));
 
             var croppedBitmap = filter.Apply(bitmapData);
 
@@ -167,9 +167,9 @@ namespace AForgeExample
 
         private ImageSource ImageSourceForBitmap(Bitmap bmp)
         {
-            BitmapData bitmapData = bmp.LockBits(new Rectangle((bmp.Width / 2) - (FilterWidth / 2), (bmp.Height / 2) - (FilterHeight / 2), FilterWidth, FilterHeight), ImageLockMode.ReadWrite, bmp.PixelFormat);
+            BitmapData bitmapData = bmp.LockBits(new Rectangle((bmp.Width / 2) - (FilterWidth / 4), (bmp.Height / 2) - (FilterHeight / 4), FilterWidth / 2, FilterHeight / 2), ImageLockMode.ReadWrite, bmp.PixelFormat);
 
-            AForge.Imaging.Drawing.Rectangle(bitmapData, new Rectangle(0, 0, FilterWidth, FilterHeight), System.Drawing.Color.Red);
+            AForge.Imaging.Drawing.Rectangle(bitmapData, new Rectangle(0, 0, FilterWidth / 2, FilterHeight / 2), System.Drawing.Color.Red);
 
             bmp.UnlockBits(bitmapData);
 
